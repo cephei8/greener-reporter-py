@@ -1,0 +1,3 @@
+include greener_reporter/*.dylib
+include greener_reporter/*.so
+include greener_reporter/*.dll
