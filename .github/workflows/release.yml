@@ -52,7 +52,7 @@ jobs:
           tar -xzf ./greener-servermock-lib-${{ matrix.target_name }}.tar.gz -C greener_servermock/greener_servermock
 
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
@@ -118,7 +118,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
