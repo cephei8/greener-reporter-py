@@ -47,16 +47,18 @@ class TestcaseStatus(str, Enum):
 
     PASS = "pass"
     FAIL = "fail"
-    ERR = "err"
+    ERR = "error"
     SKIP = "skip"
 
 
 class Reporter:
-    def __init__(self):
+    def __init__(self, endpoint: str, api_key: str):
         self._lib = cdll.LoadLibrary(str(_LIB_PATH))
 
         self._lib.greener_reporter_new.restype = POINTER(_Reporter)
         self._lib.greener_reporter_new.argtypes = [
+            c_char_p,
+            c_char_p,
             POINTER(POINTER(_Error)),
         ]
 
@@ -69,6 +71,10 @@ class Reporter:
         self._lib.greener_reporter_session_create.restype = POINTER(_Session)
         self._lib.greener_reporter_session_create.argtypes = [
             POINTER(_Reporter),
+            c_char_p,
+            c_char_p,
+            c_char_p,
+            c_char_p,
             POINTER(POINTER(_Error)),
         ]
 
@@ -106,6 +112,8 @@ class Reporter:
 
         err = POINTER(_Error)()
         self._handle = self._lib.greener_reporter_new(
+            c_char_p(endpoint.encode()),
+            c_char_p(api_key.encode()),
             byref(err),
         )
         self._verify_call(err)
@@ -131,10 +139,36 @@ class Reporter:
         finally:
             self._handle = None
 
-    def create_session(self) -> Session:
+    def create_session(
+            self,
+            session_id: Optional[str],
+            description: Optional[str],
+            baggage: Optional[str],
+            labels: Optional[str],
+    ) -> Session:
         err = POINTER(_Error)()
         session_p = self._lib.greener_reporter_session_create(
             self._handle,
+            (
+                c_char_p(session_id.encode())
+                if session_id is not None
+                else c_char_p()
+            ),
+            (
+                c_char_p(description.encode())
+                if description is not None
+                else c_char_p()
+            ),
+            (
+                c_char_p(baggage.encode())
+                if baggage is not None
+                else c_char_p()
+            ),
+            (
+                c_char_p(labels.encode())
+                if labels is not None
+                else c_char_p()
+            ),
             byref(err),
         )
         self._verify_call(err)
