@@ -29,7 +29,7 @@ class CallCreateSession(BaseModel):
 class CallReportStatus(str, Enum):
     PASS = "pass"
     FAIL = "fail"
-    ERR = "err"
+    ERR = "error"
     SKIP = "skip"
 
 

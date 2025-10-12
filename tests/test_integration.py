@@ -53,23 +53,8 @@ def servermock_serve(fixture_name, servermock_context, servermock_responses):
 
 @pytest.fixture
 def reporter(servermock_serve):
-    with env_var("GREENER_INGRESS_ENDPOINT", servermock_serve), env_var(
-        "GREENER_INGRESS_API_KEY", "some-api-token"
-    ):
-        reporter = Reporter()
-        yield reporter
-
-
-@contextlib.contextmanager
-def env_var(name, value):
-    if value is not None:
-        os.environ[name] = value
-    try:
-        yield
-    finally:
-        if value is not None:
-            del os.environ[name]
-        pass
+    reporter = Reporter(servermock_serve, "some-api-key")
+    yield reporter
 
 
 def test_integration(reporter, servermock_context, servermock_calls, servermock_responses):
@@ -78,16 +63,12 @@ def test_integration(reporter, servermock_context, servermock_calls, servermock_
 
     def call_create_session():
         def f():
-            with env_var(
-                "GREENER_SESSION_ID",
+            return reporter.create_session(
                 str(call.payload.id) if call.payload.id else None,
-            ), env_var("GREENER_SESSION_DESCRIPTION", call.payload.description), env_var(
-                "GREENER_SESSION_BAGGAGE",
+                call.payload.description,
                 json.dumps(call.payload.baggage) if call.payload.baggage else None,
-            ), env_var(
-                "GREENER_SESSION_LABELS", call.payload.labels
-            ):
-                return reporter.create_session()
+                call.payload.labels,
+            )
 
         def success_handler():
             session = f()
