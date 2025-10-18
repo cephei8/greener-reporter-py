@@ -10,16 +10,19 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             target_name: linux-x64
             platform_tag: manylinux2014_x86_64
+          - os: ubuntu-24.04-arm
+            target_name: linux-arm64
+            platform_tag: manylinux2014_aarch64
           - os: windows-latest
             target_name: win-x64
             platform_tag: win_amd64
-          - os: macos-13
+          - os: macos-15-intel
             target_name: mac-x64
             platform_tag: macosx_13_0_x86_64
-          - os: macos-14
+          - os: macos-15
             target_name: mac-arm64
             platform_tag: macosx_14_0_arm64
     defaults:
@@ -27,14 +30,6 @@ jobs:
         shell: bash
 
     steps:
-      - if: matrix.target_name == 'mac-x64'
-        name: Verify hardware platform
-        run: if [[ $(uname -m | tr -d '[:space:]') != "x86_64" ]]; then exit 1; fi
-
-      - if: matrix.target_name == 'mac-arm64'
-        name: Verify hardware platform
-        run: if [[ $(uname -m | tr -d '[:space:]') != "arm64" ]]; then exit 1; fi
-
       - uses: actions/checkout@v5
 
       - name: Extract reporter version
@@ -51,10 +46,9 @@ jobs:
           tar -xzf ./greener-reporter-lib-${{ matrix.target_name }}.tar.gz -C greener_reporter/greener_reporter
           tar -xzf ./greener-servermock-lib-${{ matrix.target_name }}.tar.gz -C greener_servermock/greener_servermock
 
-
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - run: pip install -r requirements.txt
       - run: pytest -v .
@@ -120,7 +114,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - run: pip install setuptools
 
