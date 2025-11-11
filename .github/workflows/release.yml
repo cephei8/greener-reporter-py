@@ -21,19 +21,19 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            target_name: linux-x64
+            target_name: x86_64-linux-gnu
             platform_tag: manylinux2014_x86_64
           - os: ubuntu-24.04-arm
-            target_name: linux-arm64
+            target_name: aarch64-linux-gnu
             platform_tag: manylinux2014_aarch64
           - os: windows-latest
-            target_name: win-x64
+            target_name: x86_64-windows-msvc
             platform_tag: win_amd64
           - os: macos-15-intel
-            target_name: mac-x64
+            target_name: x86_64-macos
             platform_tag: macosx_13_0_x86_64
           - os: macos-15
-            target_name: mac-arm64
+            target_name: aarch64-macos
             platform_tag: macosx_14_0_arm64
     defaults:
       run:
