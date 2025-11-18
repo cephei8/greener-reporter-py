@@ -2,16 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      test_release:
-        description: "Test release mode (skips creating release and publishing)"
-        required: false
-        type: boolean
-        default: false
-      test_release_version:
-        description: "Test release version (required if test_release is true)"
-        required: false
-        type: string
 
 jobs:
   release_build:
@@ -21,19 +11,19 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            target_name: x86_64-linux-gnu
+            target_name: linux-x64
             platform_tag: manylinux2014_x86_64
           - os: ubuntu-24.04-arm
-            target_name: aarch64-linux-gnu
+            target_name: linux-arm64
             platform_tag: manylinux2014_aarch64
           - os: windows-latest
-            target_name: x86_64-windows-msvc
+            target_name: win-x64
             platform_tag: win_amd64
           - os: macos-15-intel
-            target_name: x86_64-macos
+            target_name: mac-x64
             platform_tag: macosx_13_0_x86_64
           - os: macos-15
-            target_name: aarch64-macos
+            target_name: mac-arm64
             platform_tag: macosx_14_0_arm64
     defaults:
       run:
@@ -42,20 +32,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Validate test release inputs
-        run: |
-          if [ "${{ inputs.test_release }}" == "true" ] && [ -z "${{ inputs.test_release_version }}" ]; then
-            echo "Error: test_release_version must be specified when test_release is true"
-            exit 1
-          fi
-
       - name: Extract reporter version
         run: |
-          if [ "${{ inputs.test_release }}" == "true" ]; then
-            export GREENER_REPORTER_VERSION="${{ inputs.test_release_version }}"
-          else
-            export GREENER_REPORTER_VERSION=$(cat DEP_VERSION_REPORTER | tr -d '[:space:]')
-          fi
+          export GREENER_REPORTER_VERSION=$(cat DEP_VERSION_REPORTER | tr -d '[:space:]')
           echo "GREENER_REPORTER_VERSION=$GREENER_REPORTER_VERSION" >> "$GITHUB_ENV"
 
       - name: Download reporter includes/libs
@@ -133,13 +112,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Validate test release inputs
-        run: |
-          if [ "${{ inputs.test_release }}" == "true" ] && [ -z "${{ inputs.test_release_version }}" ]; then
-            echo "Error: test_release_version must be specified when test_release is true"
-            exit 1
-          fi
-
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
@@ -171,14 +143,12 @@ jobs:
           merge-multiple: true
 
       - name: Create release
-        if: ${{ inputs.test_release != true }}
         run: |
           gh release create v${{ env.GREENER_REPORTER_PKG_VERSION }}
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Prepare dist directories
-        if: ${{ inputs.test_release != true }}
         working-directory: release_tars
         run: |
           mkdir dist_reporter
@@ -187,13 +157,11 @@ jobs:
           mv greener_servermock-*.whl dist_servermock
 
       - name: Publish reporter
-        if: ${{ inputs.test_release != true }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: release_tars/dist_reporter
 
       - name: Publish servermock
-        if: ${{ inputs.test_release != true }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: release_tars/dist_servermock
