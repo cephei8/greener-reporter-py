@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: '3.13'
 
       - run: pip install setuptools
 
@@ -47,11 +47,11 @@ jobs:
       - name: Download reporter includes/libs
         run: |
           export GREENER_REPORTER_RELEASE=https://github.com/cephei8/greener-reporter/releases/download/$GREENER_REPORTER_VERSION
-          wget $GREENER_REPORTER_RELEASE/greener-reporter-lib-x86_64-linux-gnu.tar.gz
-          wget $GREENER_REPORTER_RELEASE/greener-servermock-lib-x86_64-linux-gnu.tar.gz
+          wget $GREENER_REPORTER_RELEASE/greener-reporter-lib-linux-x64.tar.gz
+          wget $GREENER_REPORTER_RELEASE/greener-servermock-lib-linux-x64.tar.gz
 
-          tar -xzf ./greener-reporter-lib-x86_64-linux-gnu.tar.gz -C greener_reporter/greener_reporter
-          tar -xzf ./greener-servermock-lib-x86_64-linux-gnu.tar.gz -C greener_servermock/greener_servermock
+          tar -xzf ./greener-reporter-lib-linux-x64.tar.gz -C greener_reporter/greener_reporter
+          tar -xzf ./greener-servermock-lib-linux-x64.tar.gz -C greener_servermock/greener_servermock
 
       - run: pip install -r requirements.txt
       - run: pytest -v .
