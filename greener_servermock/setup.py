@@ -4,7 +4,7 @@ setup(
     name="greener-servermock",
     version="1.3.0",
     description="Python binding for Greener Servermock",
-    url="https://cephei8.github.io/greener",
+    url="https://greener.cephei8.dev",
     author="cephei8",
     author_email="",
     python_requires=">=3.7, <4",
