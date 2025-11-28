@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="greener-servermock",
-    version="1.3.0",
+    version="0.10.0",
     description="Python binding for Greener Servermock",
     url="https://greener.cephei8.dev",
     author="cephei8",
