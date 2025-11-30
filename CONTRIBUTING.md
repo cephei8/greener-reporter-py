@@ -1,6 +1,7 @@
 # Contributing
 
 - Discussions
+    - IRC: #greener on Libera.Chat
     - [greener-discuss mailing list](https://lists.sr.ht/~cephei8/greener-discuss)
     - [Greener GitHub Discussions](https://github.com/cephei8/greener/discussions)
 - Issues
