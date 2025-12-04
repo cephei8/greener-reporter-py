@@ -1,0 +1,3 @@
+include greener_servermock/*.dylib
+include greener_servermock/*.so
+include greener_servermock/*.dll
