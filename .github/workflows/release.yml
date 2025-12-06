@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -139,6 +140,8 @@ jobs:
         with:
           path: release_tars
           merge-multiple: true
+
+      - run: exit 1
 
       - name: Create release
         run: |
