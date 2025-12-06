@@ -31,20 +31,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Extract reporter version
         run: |
           export GREENER_REPORTER_VERSION=$(cat DEP_VERSION_REPORTER | tr -d '[:space:]')
           echo "GREENER_REPORTER_VERSION=$GREENER_REPORTER_VERSION" >> "$GITHUB_ENV"
 
-      - name: Download reporter includes/libs
-        run: |
-          export GREENER_REPORTER_RELEASE=https://github.com/cephei8/greener-reporter/releases/download/$GREENER_REPORTER_VERSION
-          curl -L -O $GREENER_REPORTER_RELEASE/greener-reporter-lib-${{ matrix.target_name }}.tar.gz
-          curl -L -O $GREENER_REPORTER_RELEASE/greener-servermock-lib-${{ matrix.target_name }}.tar.gz
-
-          tar -xzf ./greener-reporter-lib-${{ matrix.target_name }}.tar.gz -C greener_reporter/greener_reporter
-          tar -xzf ./greener-servermock-lib-${{ matrix.target_name }}.tar.gz -C greener_servermock/greener_servermock
+      - name: Build native libraries
+        run: ./build-native-libs.sh ${{ matrix.target_name }}
 
       - uses: actions/setup-python@v6
         with:
@@ -111,6 +107,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v6
         with:
