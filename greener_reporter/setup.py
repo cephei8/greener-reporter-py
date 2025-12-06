@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="greener-reporter",
-    version="0.11.0",
+    version="0.12.0",
     description="Python binding for Greener Reporter",
     url="https://greener.cephei8.dev",
     author="cephei8",
