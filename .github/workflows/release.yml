@@ -79,14 +79,14 @@ jobs:
         run: |
           python -m wheel tags --platform-tag ${{ matrix.platform_tag }} dist/greener_servermock-${{ env.GREENER_SERVERMOCK_PKG_VERSION }}-py3-none-any.whl
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
           path: greener_reporter/dist/greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
           if-no-files-found: error
           retention-days: 1
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: greener_servermock-${{ env.GREENER_SERVERMOCK_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
           path: greener_servermock/dist/greener_servermock-${{ env.GREENER_SERVERMOCK_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
