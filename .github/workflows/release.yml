@@ -54,42 +54,21 @@ jobs:
       - run: python -m build
         working-directory: greener_reporter
 
-      - run: python -m build
-        working-directory: greener_servermock
-
       - name: Extract reporter package version
         working-directory: greener_reporter
         run: |
           export PKG_VERSION=$(python setup.py --version | tr -d '[:space:]')
           echo "GREENER_REPORTER_PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
 
-      - name: Extract servermock package version
-        working-directory: greener_servermock
-        run: |
-          export PKG_VERSION=$(python setup.py --version | tr -d '[:space:]')
-          echo "GREENER_SERVERMOCK_PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
-
       - name: Set reporter wheel platform tag
         working-directory: greener_reporter
         run: |
           python -m wheel tags --platform-tag ${{ matrix.platform_tag }} dist/greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-any.whl
 
-      - name: Set servermock wheel platform tag
-        working-directory: greener_servermock
-        run: |
-          python -m wheel tags --platform-tag ${{ matrix.platform_tag }} dist/greener_servermock-${{ env.GREENER_SERVERMOCK_PKG_VERSION }}-py3-none-any.whl
-
       - uses: actions/upload-artifact@v6
         with:
           name: greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
           path: greener_reporter/dist/greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
-          if-no-files-found: error
-          retention-days: 1
-
-      - uses: actions/upload-artifact@v6
-        with:
-          name: greener_servermock-${{ env.GREENER_SERVERMOCK_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
-          path: greener_servermock/dist/greener_servermock-${{ env.GREENER_SERVERMOCK_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
           if-no-files-found: error
           retention-days: 1
 
@@ -122,19 +101,6 @@ jobs:
           export PKG_VERSION=$(python setup.py --version | tr -d '[:space:]')
           echo "GREENER_REPORTER_PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
 
-      - name: Extract servermock package version
-        working-directory: greener_servermock
-        run: |
-          export PKG_VERSION=$(python setup.py --version | tr -d '[:space:]')
-          echo "GREENER_SERVERMOCK_PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
-
-      - name: Verify reporter and servermock version
-        run: |
-          if [ "$GREENER_REPORTER_PKG_VERSION" != "$GREENER_SERVERMOCK_PKG_VERSION" ]; then
-            echo "Error: reporter and servermock must have the same version"
-            exit 1
-          fi
-
       - uses: actions/download-artifact@v7
         with:
           path: release_tars
@@ -150,16 +116,9 @@ jobs:
         working-directory: release_tars
         run: |
           mkdir dist_reporter
-          mkdir dist_servermock
           mv greener_reporter-*.whl dist_reporter
-          mv greener_servermock-*.whl dist_servermock
 
       - name: Publish reporter
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: release_tars/dist_reporter
-
-      - name: Publish servermock
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: release_tars/dist_servermock
