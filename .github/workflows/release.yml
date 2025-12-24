@@ -4,77 +4,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  release_build:
-    name: (Release) Build packages on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-24.04
-            target_name: linux-x64
-            platform_tag: manylinux2014_x86_64
-          - os: ubuntu-24.04-arm
-            target_name: linux-arm64
-            platform_tag: manylinux2014_aarch64
-          - os: windows-latest
-            target_name: win-x64
-            platform_tag: win_amd64
-          - os: macos-15-intel
-            target_name: mac-x64
-            platform_tag: macosx_13_0_x86_64
-          - os: macos-15
-            target_name: mac-arm64
-            platform_tag: macosx_14_0_arm64
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: recursive
-
-      - name: Extract reporter version
-        run: |
-          export GREENER_REPORTER_VERSION=$(cat DEP_VERSION_REPORTER | tr -d '[:space:]')
-          echo "GREENER_REPORTER_VERSION=$GREENER_REPORTER_VERSION" >> "$GITHUB_ENV"
-
-      - name: Build native libraries
-        run: ./build-native-libs.sh ${{ matrix.target_name }}
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - run: pip install -r requirements.txt
-      - run: pytest -v .
-
-      - run: pip install build wheel setuptools
-
-      - run: python -m build
-        working-directory: greener_reporter
-
-      - name: Extract reporter package version
-        working-directory: greener_reporter
-        run: |
-          export PKG_VERSION=$(python setup.py --version | tr -d '[:space:]')
-          echo "GREENER_REPORTER_PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
-
-      - name: Set reporter wheel platform tag
-        working-directory: greener_reporter
-        run: |
-          python -m wheel tags --platform-tag ${{ matrix.platform_tag }} dist/greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-any.whl
-
-      - uses: actions/upload-artifact@v6
-        with:
-          name: greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
-          path: greener_reporter/dist/greener_reporter-${{ env.GREENER_REPORTER_PKG_VERSION }}-py3-none-${{ matrix.platform_tag }}.whl
-          if-no-files-found: error
-          retention-days: 1
-
   release_create:
     name: (Release) Create release
-    needs: release_build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -93,18 +24,17 @@ jobs:
         with:
           python-version: "3.13"
 
-      - run: pip install setuptools
+      - run: ./build-servermock-native-lib.sh
 
-      - name: Extract reporter package version
-        working-directory: greener_reporter
+      - run: pipx install poetry
+      - run: poetry install --with test
+      - run: poetry run pytest -v .
+      - run: poetry build
+
+      - name: Extract package version
         run: |
-          export PKG_VERSION=$(python setup.py --version | tr -d '[:space:]')
-          echo "GREENER_REPORTER_PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
-
-      - uses: actions/download-artifact@v7
-        with:
-          path: release_tars
-          merge-multiple: true
+          export PKG_VERSION=$(poetry version -s | tr -d '[:space:]')
+          echo "GREENER_PKG_VERSION=$PKG_VERSION" >> "$GITHUB_ENV"
 
       - name: Create release
         run: |
@@ -112,13 +42,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Prepare dist directories
-        working-directory: release_tars
-        run: |
-          mkdir dist_reporter
-          mv greener_reporter-*.whl dist_reporter
-
       - name: Publish reporter
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: release_tars/dist_reporter

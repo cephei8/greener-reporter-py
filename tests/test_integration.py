@@ -3,6 +3,7 @@ import json
 import os
 
 import pytest
+import pytest_asyncio
 from pydantic import UUID4
 
 from greener_reporter import Reporter, Error as ReporterError, TestcaseStatus
@@ -51,43 +52,45 @@ def servermock_serve(fixture_name, servermock_context, servermock_responses):
     yield addr
 
 
-@pytest.fixture
-def reporter(servermock_serve):
+@pytest_asyncio.fixture
+async def reporter(servermock_serve):
     reporter = Reporter(servermock_serve, "some-api-key")
     yield reporter
+    await reporter.shutdown()
 
 
-def test_integration(reporter, servermock_context, servermock_calls, servermock_responses):
+@pytest.mark.asyncio
+async def test_integration(reporter, servermock_context, servermock_calls, servermock_responses):
     calls = Calls(**servermock_calls)
     responses = Responses(**servermock_responses)
 
-    def call_create_session():
-        def f():
-            return reporter.create_session(
+    async def call_create_session():
+        async def f():
+            return await reporter.create_session(
                 str(call.payload.id) if call.payload.id else None,
                 call.payload.description,
                 json.dumps(call.payload.baggage) if call.payload.baggage else None,
                 call.payload.labels,
             )
 
-        def success_handler():
-            session = f()
+        async def success_handler():
+            session = await f()
             assert UUID4(session.id) == responses.create_session_response.payload.id
 
-        def error_handler():
+        async def error_handler():
             with pytest.raises(ReporterError):
-                f()
+                await f()
 
         h = {
             ResponseStatus.SUCCESS: success_handler,
             ResponseStatus.ERROR: error_handler,
         }
-        h[responses.create_session_response.status]()
+        await h[responses.create_session_response.status]()
 
-    def call_create_testcase():
-        def f():
+    async def call_create_testcase():
+        async def f():
             for p in call.payload.testcases:
-                reporter.create_testcase(
+                await reporter.create_testcase(
                     p.session_id,
                     p.testcase_name,
                     p.testcase_classname,
@@ -103,18 +106,18 @@ def test_integration(reporter, servermock_context, servermock_calls, servermock_
                     None,
                 )
 
-        def success_handler():
-            f()
+        async def success_handler():
+            await f()
 
-        def error_handler():
+        async def error_handler():
             with pytest.raises(ReporterError):
-                f()
+                await f()
 
         h = {
             ResponseStatus.SUCCESS: success_handler,
             ResponseStatus.ERROR: error_handler,
         }
-        h[responses.report_response.status]()
+        await h[responses.report_response.status]()
 
     call_handlers = {
         CallFunc.CREATE_SESSION: call_create_session,
@@ -122,8 +125,8 @@ def test_integration(reporter, servermock_context, servermock_calls, servermock_
     }
 
     for call in calls.calls:
-        call_handlers[call.func]()
+        await call_handlers[call.func]()
 
-    reporter.shutdown()
+    await reporter.shutdown()
 
     servermock_context.assert_calls(servermock_calls)

@@ -3,11 +3,16 @@
 
 __pycache__/
 
-build/
-dist/
+/buil/
+/dist
+/poetry.lock
 *.egg-info/
 *.egg
 *.py[cod]
 
 .tox
 .cache
+
+/greener_servermock/*.so
+/greener_servermock/*.dll
+/greener_servermock/*.dylib
